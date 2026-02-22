@@ -296,7 +296,7 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def-user.outputs.task-definition }}
-          service: user-ecs-service
+          service: user-service-service-4hbvc4nq
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
 
@@ -315,7 +315,7 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def-ai.outputs.task-definition }}
-          service: agentic-ai-ecs-service
+          service: agentic-ai-service-service-dwba3nnn
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
 
@@ -334,6 +334,6 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def-content.outputs.task-definition }}
-          service: content-ecs-service
+          service: content-service-service-hr0po0jo
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
