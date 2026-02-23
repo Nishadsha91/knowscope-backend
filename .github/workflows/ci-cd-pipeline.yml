@@ -119,7 +119,7 @@ jobs:
         id: task-def-ai
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: ecs/agentic-ai-task-def.json
+          task-definition: ecs/ai-task-def.json
           container-name: agentic-ai-service-container
           image: ${{ steps.login-ecr.outputs.registry }}/${{ env.AI_ECR }}:${{ github.sha }}
 
