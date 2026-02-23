@@ -22,16 +22,7 @@
           "protocol": "tcp"
         }
       ],
-      "environment": [
-        {
-          "name": "MONGO_URI",
-          "value": "mongodb+srv://knowscope80_db_user:eFNcYt5zVvRL9qAS@knowscope.djnzjt4.mongodb.net/?appName=knowscope"
-        },
-        {
-          "name": "MONGO_DB",
-          "value": "knowscope"
-        }
-      ],
+      "environment": [],
       "mountPoints": [],
       "volumesFrom": [],
       "logConfiguration": {
