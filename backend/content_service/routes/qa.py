@@ -16,11 +16,43 @@ Endpoints:
   DELETE /api/qa/book/{id} — Delete all vector chunks for a specific book
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException,Depends,Header
 from pydantic import BaseModel, Field
 from typing import Optional, List
+from .jwt_utils import decode_access_token 
 
 router = APIRouter(prefix="/api/qa", tags=["Question Answering"])
+
+
+
+
+
+
+
+
+
+async def get_current_user_from_header(authorization: str = Header(...)):
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid auth header")
+    token = authorization.split(" ")[1]
+    try:
+        return decode_access_token(token)
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    
+    
+
+@router.get("/me")
+async def read_my_profile(current_user: dict = Depends(get_current_user_from_header)):
+    # current_user = {'user_id': ..., 'email': ...}
+    return {"message": "Current user fetched successfully", "user": current_user}
+
+
+
+
+
+
+
 
 
 # ─────────────────────────────────────────────
