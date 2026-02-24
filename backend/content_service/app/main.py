@@ -13,7 +13,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from routes.ingest import router as ingest_router
 from routes.qa import router as qa_router
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup / shutdown lifecycle."""
