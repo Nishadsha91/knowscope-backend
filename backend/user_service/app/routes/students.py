@@ -1,9 +1,26 @@
 from typing import Optional
-from fastapi import APIRouter, UploadFile, Form, Depends
+from fastapi import APIRouter, UploadFile, Form, Depends ,Depends, HTTPException, Header
 from app.database import student_collection
 from app.utils import save_image
-from app.Jwt_utils.auth import get_current_user
+# from app.Jwt_utils.auth import get_current_user
+from .jwt_handler import get_current_user
 from bson import ObjectId
+
+
+
+
+
+async def get_user_from_header(authorization: str = Header(...)):
+            
+    print("Authorization header received:", authorization)
+    token = authorization.split(" ")[1] 
+    try:
+        return get_current_user(token)
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=str(e))
+    
+    
+    
 
 student_router = APIRouter(prefix="/students", tags=["Students"])
 
@@ -37,8 +54,10 @@ async def create_student(
 
 
 @student_router.get("/authenticateduser")
-async def get_my_profile(current_user: dict = Depends(get_current_user)):
+async def get_my_profile(current_user: dict = Depends(get_user_from_header)):
+    print('....',current_user)
     student = await student_collection.find_one({"created_by": str(current_user["user_id"])})
+    print('///////////////////',student)
     if not student:
         return {"error": "Student profile not found for this user"}
     return {
