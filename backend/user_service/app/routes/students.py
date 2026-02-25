@@ -57,7 +57,6 @@ async def create_student(
 async def get_my_profile(current_user: dict = Depends(get_user_from_header)):
     print('....',current_user)
     student = await student_collection.find_one({"created_by": str(current_user["user_id"])})
-    print('///////////////////',student)
     if not student:
         return {"error": "Student profile not found for this user"}
     return {
@@ -87,6 +86,16 @@ async def get_students():
             "learningstyle": s.get("learningstyle", None) 
         })
     return students
+
+
+@student_router.delete("/delete/{student_id}")
+async def delete_student(student_id: str):
+    if not ObjectId.is_valid(student_id):
+        raise HTTPException(status_code=400, detail="Invalid student ID")
+    result = await student_collection.delete_one({"_id": ObjectId(student_id)})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Student not found")
+    return {"message": "Student profile deleted successfully", "id": student_id}
 
 
 @student_router.get("/getonespecific/{student_id}")

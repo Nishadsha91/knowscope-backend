@@ -37,3 +37,16 @@ class ConversationSummaryResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
+
+class TextBookCreate(BaseModel):
+    class_name: int
+    subject: str
+    part: str
+
+class TextBookResponse(BaseModel):
+    id: str
+    class_name: int
+    subject: str
+    part: str
+    file_url: str

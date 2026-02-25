@@ -10,6 +10,8 @@ from app.database import conversations_collection, messages_collection
 from services.qa_service import get_user_conversations,get_conversation_messages
 from bson import ObjectId
 
+
+
 router = APIRouter(prefix="/api/qa", tags=["Question Answering"])
 
 async def get_current_user_from_header(authorization: str = Header(...)):
@@ -30,15 +32,6 @@ async def read_my_profile(current_user: dict = Depends(get_current_user_from_hea
 
 
 
-
-
-
-
-
-
-# ─────────────────────────────────────────────
-# Request / Response models
-# ─────────────────────────────────────────────
 
 class QuestionRequest(BaseModel):
     """
@@ -70,56 +63,7 @@ class SearchResponse(BaseModel):
     total_found: int
 
 
-# ─────────────────────────────────────────────
-# POST /api/qa/ask  — Full RAG (vector search + LLM)
-# # ─────────────────────────────────────────────
 
-# @router.post("/ask", response_model=QuestionResponse)
-# async def ask_question(request: QuestionRequest):
-#     """
-#     Answer a student question using the LangGraph RAG pipeline.
-#     Automatically searches ALL stored textbooks — no class or subject required.
-#     """
-#     try:
-#         from services.rag_graph import rag_graph
-
-#         print(f"📝 Question: {request.question}")
-
-#         # Run the LangGraph RAG pipeline
-#         result = await rag_graph.ainvoke({
-#             "question": request.question,
-#             "top_k": request.top_k,
-#             "embedding": [],
-#             "chunks": [],
-#             "answer": "",
-#             "sources": [],
-#             "confidence": 0.0
-#         })
-
-#         # Low-confidence guard: if confidence is very low, say so
-#         answer = result["answer"]
-#         if result["confidence"] < 0.25 and len(result["chunks"]) < 2:
-#             answer = "No answer found in textbook."
-#         print("     answer  .....",answer,'     ,    , , , , result   ..',result)     
-#         return QuestionResponse(
-#             answer=answer,
-#             sources=result["sources"],
-#             confidence=result["confidence"],
-#             total_chunks_used=len(result["chunks"])
-#         )
-
-#     except Exception as e:
-#         print(f"❌ Error: {str(e)}")
-#         raise HTTPException(status_code=500, detail=str(e))
-
-
-
-
-from fastapi import APIRouter, Depends
-from typing import List
-from app.schemas import QuestionRequest, MessageResponse, ConversationResponse
-from services.qa_service import create_user_if_not_exists, get_or_create_conversation, save_message
-from app.database import conversations_collection, messages_collection
 
 router = APIRouter(prefix="/api/qa", tags=["QA"])
 
@@ -137,15 +81,8 @@ async def ask_question(request: QuestionRequest, current_user: dict = Depends(ge
 
     user_id = current_user["user_id"]
     email = current_user.get("email", "")
-
-    # 1️⃣ Ensure user exists
-    await create_user_if_not_exists(user_id, email)
-
-    # 2️⃣ Get or create conversation
-    # conversation_title = request.conversation_title or "Default Session"
-    # conversation_id=request.conversation_id
     
-    # conversation = await get_or_create_conversation(user_id, conversation_title,conversation_id)
+    await create_user_if_not_exists(user_id, email)
     conversation = await get_or_create_conversation(user_id=user_id,conversation_id=request.conversation_id,title=request.conversation_title) 
     result = await rag_graph.ainvoke({
         "question": request.question,
