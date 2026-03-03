@@ -50,7 +50,7 @@ jobs:
       - name: Build Docker Image (CI validation only)
         uses: docker/build-push-action@v5
         with:
-          context: backend/${{ matrix.service }}
+          context: backend/${{ matrix.service }}  
           push: false
           tags: ${{ matrix.service }}:ci-test
           cache-from: type=gha,scope=${{ matrix.service }}
