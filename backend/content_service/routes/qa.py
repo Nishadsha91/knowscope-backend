@@ -1,21 +1,3 @@
-"""
-routes/qa.py
-============
-Student Question-Answering endpoints.
-
-Students provide ONLY a question. The system:
-1. Embeds the question using SentenceTransformers.
-2. Searches ALL stored textbooks in ChromaDB (no class/subject filter).
-3. Generates an exam-style answer via GPT (or returns raw chunks if no API key).
-
-Endpoints:
-  POST /api/qa/ask       — Full RAG pipeline (vector search + LLM)
-  POST /api/qa/search    — Context-only (vector search, no LLM)
-  GET  /api/qa/stats     — ChromaDB vector store statistics
-  GET  /api/qa/books     — List all distinct book IDs in the vector store
-  DELETE /api/qa/book/{id} — Delete all vector chunks for a specific book
-"""
-
 from fastapi import APIRouter, HTTPException,Depends,Header
 from pydantic import BaseModel, Field
 from typing import Optional, List
@@ -50,6 +32,21 @@ async def read_my_profile(current_user: dict = Depends(get_current_user_from_hea
 
 
 
+# class QuestionRequest(BaseModel):
+#     """
+#     Students provide ONLY a question.
+#     The system automatically searches all stored textbooks.
+#     """
+#     question: str = Field(
+#         ...,
+#         min_length=3,
+#         max_length=500,
+#         description="The student's question (no class or subject needed)"
+#     )
+#     top_k: Optional[int] = Field(
+#         5, ge=1, le=20,
+#         description="Number of textbook chunks to retrieve"
+#     )
 
 
 
@@ -229,3 +226,7 @@ async def delete_book_chunks(book_id: str):
             return {"message": f"❌ Failed to delete chunks for book: {book_id}"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+    
+    
+    
