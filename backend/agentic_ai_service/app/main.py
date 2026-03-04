@@ -4,17 +4,32 @@ from app.graphs.mcq_graph import run_mcq_pipeline
 from app.services.quiz_repository import save_quiz
 from app.schemas.evaluation import EvaluationRequest, EvaluationResponse
 from app.graphs.evaluation_graph import run_evaluation_pipeline
+from app.utils.class_topic_mapper import resolve_topic, list_supported_mappings
 
 app = FastAPI(title="Knowscope Agentic Service")
 
 
+@app.get("/api/mcq/topics")
+async def get_supported_topics():
+    """
+    Returns all supported (subject, class_level, topic_id) combinations
+    that can be used as inputs to /api/mcq/generate.
+    """
+    return {"mappings": list_supported_mappings()}
+
+
 @app.post("/api/mcq/generate", response_model=MCQResponse)
 async def generate_mcq(request: MCQRequest):
+    num_questions = request.num_questions or 20
+    top_k = request.top_k or 4
 
     try:
+        # Resolve class_level → topic_id via the curriculum mapper
+        topic = resolve_topic(request.subject, request.class_level)
+
         mcqs = await run_mcq_pipeline(
             subject=request.subject,
-            topic=request.topic,
+            topic=topic,
             difficulty=request.difficulty,
             num_questions=request.num_questions,
             top_k=request.top_k,
@@ -22,7 +37,8 @@ async def generate_mcq(request: MCQRequest):
 
         quiz_id = await save_quiz(
             subject=request.subject,
-            topic=request.topic,
+            class_level=request.class_level,
+            topic=topic,
             difficulty=request.difficulty,
             questions=mcqs
         )
@@ -30,7 +46,8 @@ async def generate_mcq(request: MCQRequest):
         return {
             "quiz_id": quiz_id,
             "subject": request.subject,
-            "topic": request.topic,
+            "class_level": request.class_level,
+            "topic": topic,
             "questions": mcqs
         }
 

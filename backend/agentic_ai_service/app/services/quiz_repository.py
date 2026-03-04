@@ -6,6 +6,7 @@ from app.core.database import quizzes_collection
 
 
 async def save_quiz(subject: str,
+                    class_level: str,
                     topic: str | None,
                     difficulty: str,
                     questions: list):
@@ -15,6 +16,7 @@ async def save_quiz(subject: str,
 
     quiz_doc = {
         "subject": subject,
+        "class_level": class_level,
         "topic": topic,
         "difficulty": difficulty,
         "questions": questions,

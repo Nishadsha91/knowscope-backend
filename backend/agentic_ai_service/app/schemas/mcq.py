@@ -4,7 +4,7 @@ from typing import List, Any
 
 class MCQRequest(BaseModel):
     subject: str
-    topic: str
+    class_level: str          # e.g. "Class 10" — maps to a topic automatically
     difficulty: str
     num_questions: int = 20
     top_k: int = 6
@@ -25,5 +25,7 @@ class MCQ(BaseModel):
 class MCQResponse(BaseModel):
     quiz_id: str
     subject: str
-    topic: str
+    class_level: str          # echoed back from the request
+    topic: str                # the resolved topic_id that was used
     questions: List[MCQ]
+    
