@@ -1,14 +1,12 @@
 from typing import Optional
-from fastapi import APIRouter, UploadFile, Form, Depends ,Depends, HTTPException, Header
+
+from bson import ObjectId
+from fastapi import APIRouter, Depends, Form, Header, HTTPException, UploadFile
+
+from app.Utility.utils import serialize_student
 from app.database import student_collection
 from app.utils import save_image
-# from app.Jwt_utils.auth import get_current_user
 from .jwt_handler import get_current_user
-from bson import ObjectId
-<<<<<<< HEAD
-=======
-from app.Utility.utils import serialize_student
->>>>>>> upstream/developer
 
 
 
@@ -32,19 +30,13 @@ def objectid_to_str(obj):
     if isinstance(obj, ObjectId):
         return str(obj)
     return obj
-<<<<<<< HEAD
-=======
-
-
-
->>>>>>> upstream/developer
 @student_router.post("/create")
 async def create_student(
     name: str = Form(...),
     class_number: int = Form(...),
     medium: str = Form(...),
     image: Optional[UploadFile] = None,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_user_from_header),
     learningstyle:str=Form(...)
 ):
     image_name = await save_image(image) if image else None
@@ -65,12 +57,7 @@ async def create_student(
 
 @student_router.get("/authenticateduser")
 async def get_my_profile(current_user: dict = Depends(get_user_from_header)):
-    print('....',current_user)
     student = await student_collection.find_one({"created_by": str(current_user["user_id"])})
-<<<<<<< HEAD
-    print('///////////////////',student)
-=======
->>>>>>> upstream/developer
     if not student:
         return {"error": "Student profile not found for this user"}
     return {
@@ -84,19 +71,14 @@ async def get_my_profile(current_user: dict = Depends(get_user_from_header)):
     }
 
 
-<<<<<<< HEAD
-=======
 @student_router.get("/show_alluserprofile", response_model=list[dict])
 async def get_all_students():
-    students = []
+    students: list[dict] = []
     cursor = student_collection.find({})
     async for student in cursor:
         students.append(serialize_student(student))
         print(student)
     return students
-
-
->>>>>>> upstream/developer
 
 
 @student_router.get("/get")
@@ -115,8 +97,6 @@ async def get_students():
     return students
 
 
-<<<<<<< HEAD
-=======
 @student_router.delete("/delete/{student_id}")
 async def delete_student(student_id: str):
     if not ObjectId.is_valid(student_id):
@@ -125,9 +105,6 @@ async def delete_student(student_id: str):
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Student not found")
     return {"message": "Student profile deleted successfully", "id": student_id}
-
-
->>>>>>> upstream/developer
 @student_router.get("/getonespecific/{student_id}")
 async def get_student(student_id: str):
     student = await student_collection.find_one({"_id": ObjectId(student_id)})

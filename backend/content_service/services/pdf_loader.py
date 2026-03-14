@@ -8,18 +8,13 @@ def extract_pages(pdf_path: str):
         for idx, page in enumerate(pdf.pages):
             raw_text = page.extract_text()
             if raw_text and len(raw_text.strip()) > 30:
-<<<<<<< HEAD
-                # Clean text: remove headers/footers, artifacts, normalize whitespace
                 cleaned = normalize_text(raw_text)
                 if cleaned:
-                    pages.append({
-                        "page": idx + 1,
-                        "text": cleaned
-                    })
-=======
-                cleaned = normalize_text(raw_text)
-                if cleaned:
-                    pages.append({"page": idx + 1,"text": cleaned})
->>>>>>> upstream/developer
+                    pages.append(
+                        {
+                            "page": idx + 1,
+                            "text": cleaned,
+                        }
+                    )
 
     return pages

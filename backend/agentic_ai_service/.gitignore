@@ -10,6 +10,8 @@
 ######################################
 venv/
 .venv/
+agentic_venv/
+.agentic_venv/
 ENV/
 env/
 
