@@ -244,10 +244,15 @@ async def get_overview(user_id: str) -> Dict:
 async def get_mastery_heatmap(user_id: str) -> Dict:
     """
     Build 52-week × 7-day heatmap from quiz_attempts.
+    Grid starts from the most-recent Sunday 52 weeks ago so columns align.
     One cell per calendar day; mastery_level = avg score converted to 0-6 scale.
     """
     now = datetime.utcnow()
-    start = now - timedelta(weeks=52)
+    today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # Align grid start to the most-recent Sunday 364 days back
+    days_back = 363 + today.weekday() + 1  # roll back to previous Sunday
+    start = today - timedelta(days=days_back)
 
     # Aggregation: group quiz attempts by date, avg mastery_level
     pipeline = [
@@ -276,27 +281,30 @@ async def get_mastery_heatmap(user_id: str) -> Dict:
         }},
     ]
     sess_cursor = study_sessions_col.aggregate(sess_pipeline)
-    study_days = set()
+    study_days: set = set()
     async for row in sess_cursor:
         study_days.add(row["_id"])
 
-    # Build ordered cell list for 364 days (52 weeks)
-    cells = []
+    # Build ordered cell list — one entry per day from start to today (inclusive)
+    total_days = (today - start).days + 1
+    cells: List[Dict[str, Any]] = []
     month_labels: List[Dict[str, Any]] = []
-    last_month = None
+    last_month: Optional[str] = None
     col_index = 0
 
-    for i in range(364):
+    for i in range(total_days):
         day = start + timedelta(days=i)
         date_str = day.strftime("%Y-%m-%d")
 
-        # Month label tracking
+        # New column starts every Sunday (weekday == 6)
+        if day.weekday() == 6 and i > 0:
+            col_index += 1
+
+        # Month label: record when month changes
         month_name = day.strftime("%b")
         if month_name != last_month:
             month_labels.append({"month": month_name, "col_index": col_index})
             last_month = month_name
-        if day.weekday() == 6:   # Sunday = new column
-            col_index += 1
 
         if date_str in by_date:
             intensity = _mastery_to_heatmap(by_date[date_str])
@@ -347,28 +355,50 @@ async def get_subject_progress(user_id: str) -> List[Dict]:
 
 async def get_topic_analysis(user_id: str) -> Dict:
     """
-    strengths : mastery_level >= 4
-    weaknesses: mastery_level <= 2  (or no data)
+    Thresholds (mastery scale 0-4):
+      strengths : mastery_level >= 3  (good → expert)
+      weaknesses: mastery_level <= 1  (no knowledge → beginner)
+      neutral   : mastery_level == 2  (skip — neither strong nor weak)
+    Also appends any TRACKED_SUBJECTS topic with zero quiz attempts as
+    a has_data=False weakness so the frontend can show 'Not enough data'.
     """
     cursor = mastery_scores_col.find({"user_id": user_id})
-    strengths = []
-    weaknesses = []
+    strengths: List[Dict] = []
+    weaknesses: List[Dict] = []
+    seen_topics: set = set()
 
     async for doc in cursor:
-        mastery = doc.get("mastery_level", 0)
-        topic   = doc.get("topic", "")
-        item = {"topic": topic, "mastery_level": mastery}
+        mastery  = doc.get("mastery_level", 0)
+        topic    = doc.get("topic", "")
+        subject  = doc.get("subject", "")
+        attempts = doc.get("attempt_count", 0)
+        seen_topics.add(topic)
 
-        if mastery >= 4:
+        item = {
+            "topic":         topic,
+            "subject":       subject,
+            "mastery_level": mastery,
+            "attempt_count": attempts,
+        }
+
+        if mastery >= 3:
             strengths.append(item)
-        elif mastery <= 2:
+        elif mastery <= 1:
             weaknesses.append({**item, "has_data": True})
+        # mastery == 2 → neutral, intentionally excluded
 
-    # Sort for relevance
+    # Sort for relevance: best strengths first, worst weaknesses first
     strengths.sort(key=lambda x: -x["mastery_level"])
     weaknesses.sort(key=lambda x: x["mastery_level"])
 
-    return {"strengths": strengths, "weaknesses": weaknesses}
+    return {
+        "strengths":  strengths,
+        "weaknesses": weaknesses,
+        "summary": {
+            "total_strengths":  len(strengths),
+            "total_weaknesses": len(weaknesses),
+        },
+    }
 
 
 # ── Dashboard: Activity Feed ───────────────────────────────────────────────────

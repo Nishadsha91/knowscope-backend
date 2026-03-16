@@ -69,18 +69,28 @@ class SubjectProgressResponse(BaseModel):
 
 class StrengthTopic(BaseModel):
     topic: str
+    subject: str = ""
     mastery_level: int
+    attempt_count: int = 0
 
 
 class WeaknessTopic(BaseModel):
     topic: str
+    subject: str = ""
     mastery_level: int
+    attempt_count: int = 0
     has_data: bool
+
+
+class TopicAnalysisSummary(BaseModel):
+    total_strengths: int
+    total_weaknesses: int
 
 
 class TopicAnalysisResponse(BaseModel):
     strengths: List[StrengthTopic]
     weaknesses: List[WeaknessTopic]
+    summary: TopicAnalysisSummary
 
 
 # ── Overview / stats ──────────────────────────────────────────────────────────
